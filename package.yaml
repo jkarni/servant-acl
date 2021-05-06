@@ -28,6 +28,14 @@ library:
   source-dirs: src
 
 tests:
+
+  readme:
+    main: examples/README.lhs
+    ghc-options:
+    - -pgmL markdown-unlit
+    dependencies:
+    - markdown-unlit
+
   servant-acl-test:
     main:                Spec.hs
     source-dirs:         test
@@ -46,3 +54,7 @@ default-extensions:
   - MultiParamTypeClasses
   - TypeFamilies
   - TypeOperators
+
+
+ghc-options:
+  - -Wall

@@ -33,8 +33,23 @@ library
   hs-source-dirs:
       src
   default-extensions: FlexibleContexts FlexibleInstances KindSignatures MultiParamTypeClasses TypeFamilies TypeOperators
+  ghc-options: -Wall
   build-depends:
       base >=4.7 && <5
+    , servant
+    , servant-server
+  default-language: Haskell2010
+
+test-suite readme
+  type: exitcode-stdio-1.0
+  main-is: examples/README.lhs
+  other-modules:
+      Paths_servant_acl
+  default-extensions: FlexibleContexts FlexibleInstances KindSignatures MultiParamTypeClasses TypeFamilies TypeOperators
+  ghc-options: -Wall -pgmL markdown-unlit
+  build-depends:
+      base >=4.7 && <5
+    , markdown-unlit
     , servant
     , servant-server
   default-language: Haskell2010
@@ -47,7 +62,7 @@ test-suite servant-acl-test
   hs-source-dirs:
       test
   default-extensions: FlexibleContexts FlexibleInstances KindSignatures MultiParamTypeClasses TypeFamilies TypeOperators
-  ghc-options: -threaded -rtsopts -with-rtsopts=-N
+  ghc-options: -Wall -threaded -rtsopts -with-rtsopts=-N
   build-depends:
       base >=4.7 && <5
     , hspec
