@@ -26,6 +26,16 @@ dependencies:
 
 library:
   source-dirs: src
+  default-extensions:
+    - DataKinds
+    - FlexibleContexts
+    - FlexibleInstances
+    - KindSignatures
+    - MultiParamTypeClasses
+    - RankNTypes
+    - ScopedTypeVariables
+    - TypeFamilies
+    - TypeOperators
 
 tests:
 
@@ -36,7 +46,10 @@ tests:
     dependencies:
     - aeson
     - markdown-unlit
+    - mtl
     - servant-acl
+    - servant-auth
+    - servant-auth-server
     - warp
 
   spec:
@@ -50,14 +63,6 @@ tests:
     - servant-acl
     - hspec
 
-default-extensions:
-  - DataKinds
-  - FlexibleContexts
-  - FlexibleInstances
-  - KindSignatures
-  - MultiParamTypeClasses
-  - TypeFamilies
-  - TypeOperators
 
 
 ghc-options:

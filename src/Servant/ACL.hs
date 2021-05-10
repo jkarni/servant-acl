@@ -1,7 +1,10 @@
 module Servant.ACL
   ( AsACL,
+    AsACLT,
     AndThen,
     serveWithACL,
+    serveTWithACL,
+    serveTWithACLAndContext,
   )
 where
 

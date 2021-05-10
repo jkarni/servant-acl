@@ -24,6 +24,52 @@ serveWithACL api acl server =
     (genericApi api)
     (toServant acl `andThen` genericServer server)
 
+-- | Serve a hoisted generic servant server with ACL.
+serveTWithACL ::
+  forall routes m.
+  ( GenericServant routes AsApi,
+    GenericServant routes (AsServerT m),
+    GenericServant routes (AsACLT m),
+    AndThen (ToServant routes (AsACLT m)) (ServerT (ToServant routes AsApi) m),
+    ToServant routes (AsServerT m) ~ ServerT (ToServant routes AsApi) m,
+    HasServer (ToServantApi routes) '[ErrorFormatters]
+  ) =>
+  Proxy routes ->
+  (forall a. m a -> Handler a) ->
+  routes (AsACLT m) ->
+  routes (AsServerT m) ->
+  Application
+serveTWithACL api nat acl server =
+  serveTWithACLAndContext api nat acl server (defaultErrorFormatters :. EmptyContext)
+
+-- | Serve a hoisted generic servant server, with ACL and `Context`.
+serveTWithACLAndContext ::
+  forall routes m ctx.
+  ( GenericServant routes AsApi,
+    GenericServant routes (AsServerT m),
+    GenericServant routes (AsACLT m),
+    HasContextEntry (ctx .++ DefaultErrorFormatters) ErrorFormatters,
+    AndThen (ToServant routes (AsACLT m)) (ServerT (ToServant routes AsApi) m),
+    ToServant routes (AsServerT m) ~ ServerT (ToServant routes AsApi) m,
+    HasServer (ToServantApi routes) ctx
+  ) =>
+  Proxy routes ->
+  (forall a. m a -> Handler a) ->
+  routes (AsACLT m) ->
+  routes (AsServerT m) ->
+  Context ctx ->
+  Application
+serveTWithACLAndContext api nat acl server ctx =
+  serveWithContext
+    (genericApi api)
+    ctx
+    ( hoistServerWithContext (genericApi api) contextP nat $
+        toServant acl `andThen` toServant server
+    )
+  where
+    contextP :: Proxy ctx
+    contextP = Proxy
+
 -- | A datatype `AsACLT m` is exactly the same as `AsServerT m`, except that the
 -- return value under the m monad is always ().
 --
@@ -48,7 +94,9 @@ type family VoidReturn a where
 class AndThen a b where
   andThen :: a -> b -> b
 
-instance {-# OVERLAPPABLE #-} Applicative m => AndThen (m a) (m b) where
+-- I would have thought `m a` is already more general than `(x -> a)`, but
+-- apparently we need to do the `ma ~ m a` trick.
+instance {-# OVERLAPPABLE #-} (ma ~ m a, mb ~ m b, Applicative m) => AndThen ma mb where
   andThen = (*>)
 
 instance {-# OVERLAPPING #-} (AndThen a b) => AndThen (x -> a) (x -> b) where
