@@ -1,6 +1,8 @@
-module Servant.ACL where
+module Servant.ACL
+  ( AsACL,
+    AndThen,
+    serveWithACL,
+  )
+where
 
 import Servant.ACL.Internal.Classes
-
-someFunc :: IO ()
-someFunc = putStrLn "someFunc"

@@ -32,7 +32,7 @@ library
       Paths_servant_acl
   hs-source-dirs:
       src
-  default-extensions: FlexibleContexts FlexibleInstances KindSignatures MultiParamTypeClasses TypeFamilies TypeOperators
+  default-extensions: DataKinds FlexibleContexts FlexibleInstances KindSignatures MultiParamTypeClasses TypeFamilies TypeOperators
   ghc-options: -Wall
   build-depends:
       base >=4.7 && <5
@@ -45,23 +45,26 @@ test-suite readme
   main-is: examples/README.lhs
   other-modules:
       Paths_servant_acl
-  default-extensions: FlexibleContexts FlexibleInstances KindSignatures MultiParamTypeClasses TypeFamilies TypeOperators
+  default-extensions: DataKinds FlexibleContexts FlexibleInstances KindSignatures MultiParamTypeClasses TypeFamilies TypeOperators
   ghc-options: -Wall -pgmL markdown-unlit
   build-depends:
-      base >=4.7 && <5
+      aeson
+    , base >=4.7 && <5
     , markdown-unlit
     , servant
+    , servant-acl
     , servant-server
+    , warp
   default-language: Haskell2010
 
-test-suite servant-acl-test
+test-suite spec
   type: exitcode-stdio-1.0
   main-is: Spec.hs
   other-modules:
       Paths_servant_acl
   hs-source-dirs:
       test
-  default-extensions: FlexibleContexts FlexibleInstances KindSignatures MultiParamTypeClasses TypeFamilies TypeOperators
+  default-extensions: DataKinds FlexibleContexts FlexibleInstances KindSignatures MultiParamTypeClasses TypeFamilies TypeOperators
   ghc-options: -Wall -threaded -rtsopts -with-rtsopts=-N
   build-depends:
       base >=4.7 && <5

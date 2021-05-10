@@ -34,9 +34,12 @@ tests:
     ghc-options:
     - -pgmL markdown-unlit
     dependencies:
+    - aeson
     - markdown-unlit
+    - servant-acl
+    - warp
 
-  servant-acl-test:
+  spec:
     main:                Spec.hs
     source-dirs:         test
     ghc-options:
@@ -48,6 +51,7 @@ tests:
     - hspec
 
 default-extensions:
+  - DataKinds
   - FlexibleContexts
   - FlexibleInstances
   - KindSignatures
