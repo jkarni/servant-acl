@@ -38,6 +38,7 @@ library
       base >=4.7 && <5
     , servant
     , servant-server
+    , text
   default-language: Haskell2010
 
 test-suite readme
@@ -56,6 +57,7 @@ test-suite readme
     , servant-auth
     , servant-auth-server
     , servant-server
+    , text
     , warp
   default-language: Haskell2010
 
@@ -73,4 +75,5 @@ test-suite spec
     , servant
     , servant-acl
     , servant-server
+    , text
   default-language: Haskell2010
