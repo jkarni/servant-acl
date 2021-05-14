@@ -26,20 +26,25 @@ source-repository head
 library
   exposed-modules:
       Servant.ACL
-      Servant.ACL.Internal.Classes
+      Servant.ACL.Internal.AsACL
+      Servant.ACL.Internal.HasAuthorizedLinks
       Servant.ACL.Internal.Links
   other-modules:
       Paths_servant_acl
   hs-source-dirs:
       src
-  default-extensions: DataKinds FlexibleContexts FlexibleInstances KindSignatures MultiParamTypeClasses RankNTypes ScopedTypeVariables TypeFamilies TypeOperators
+  default-extensions: DataKinds DeriveAnyClass DeriveGeneric DeriveFunctor DeriveFoldable DeriveTraversable DerivingStrategies FlexibleContexts FlexibleInstances GeneralizedNewtypeDeriving KindSignatures MultiParamTypeClasses OverloadedStrings RankNTypes ScopedTypeVariables TypeFamilies TypeOperators
   ghc-options: -Wall
   build-depends:
-      base >=4.7 && <5
+      aeson
+    , base >=4.7 && <5
+    , containers
     , network-uri
+    , network-uri-json
     , servant
     , servant-server
     , text
+    , unordered-containers
   default-language: Haskell2010
 
 test-suite readme
@@ -51,15 +56,18 @@ test-suite readme
   build-depends:
       aeson
     , base >=4.7 && <5
+    , containers
     , markdown-unlit
     , mtl
     , network-uri
+    , network-uri-json
     , servant
     , servant-acl
     , servant-auth
     , servant-auth-server
     , servant-server
     , text
+    , unordered-containers
     , warp
   default-language: Haskell2010
 
@@ -67,16 +75,23 @@ test-suite spec
   type: exitcode-stdio-1.0
   main-is: Spec.hs
   other-modules:
+      Servant.ACLSpec
       Paths_servant_acl
   hs-source-dirs:
       test
+  default-extensions: DataKinds DeriveAnyClass DeriveGeneric DeriveFunctor DeriveFoldable DeriveTraversable DerivingStrategies FlexibleContexts FlexibleInstances GeneralizedNewtypeDeriving KindSignatures MultiParamTypeClasses OverloadedStrings RankNTypes ScopedTypeVariables TypeFamilies TypeOperators
   ghc-options: -Wall -threaded -rtsopts -with-rtsopts=-N
   build-depends:
-      base >=4.7 && <5
+      aeson
+    , aeson-qq
+    , base >=4.7 && <5
+    , containers
     , hspec
     , network-uri
+    , network-uri-json
     , servant
     , servant-acl
     , servant-server
     , text
+    , unordered-containers
   default-language: Haskell2010

@@ -21,19 +21,33 @@ description:         Please see the README on GitHub at <https://github.com/jkar
 
 dependencies:
 - base >= 4.7 && < 5
+- aeson
+- containers
 - network-uri
+- network-uri-json
 - servant
 - servant-server
 - text
+- unordered-containers
 
 library:
   source-dirs: src
-  default-extensions:
+  # We don't want this to be a top-level extension because the README should
+  # have no extensions at all.
+  default-extensions: &many-extensions
     - DataKinds
+    - DeriveAnyClass
+    - DeriveGeneric
+    - DeriveFunctor
+    - DeriveFoldable
+    - DeriveTraversable
+    - DerivingStrategies
     - FlexibleContexts
     - FlexibleInstances
+    - GeneralizedNewtypeDeriving
     - KindSignatures
     - MultiParamTypeClasses
+    - OverloadedStrings
     - RankNTypes
     - ScopedTypeVariables
     - TypeFamilies
@@ -46,7 +60,6 @@ tests:
     ghc-options:
     - -pgmL markdown-unlit
     dependencies:
-    - aeson
     - markdown-unlit
     - mtl
     - servant-acl
@@ -62,8 +75,11 @@ tests:
     - -rtsopts
     - -with-rtsopts=-N
     dependencies:
+    - aeson
+    - aeson-qq
     - servant-acl
     - hspec
+    default-extensions: *many-extensions
 
 
 

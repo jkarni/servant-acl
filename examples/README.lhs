@@ -14,6 +14,8 @@ further benefits, such as allowing checks to see if an action *would* be
 allowed. This means you can easily make one check be the combination of two
 others, for example. It also means HATEOAS becomes easier (see below).
 
+It is designed to be used with the generic approach to servant.
+
 ## HATEOAS
 
 TODO
@@ -24,13 +26,14 @@ TODO
 
 # Annotated example
 
-Below is a fai
+Below is a fairly extensive annotated example of usage.
 
 ~~~ haskell
 {-# LANGUAGE DataKinds #-}
 {-# LANGUAGE DeriveAnyClass #-}
 {-# LANGUAGE DeriveGeneric #-}
 {-# LANGUAGE GeneralizedNewtypeDeriving #-}
+{-# LANGUAGE OverloadedLabels #-}
 {-# LANGUAGE TypeOperators #-}
 import Data.Aeson (ToJSON, FromJSON)
 import Control.Monad.Reader
@@ -39,11 +42,21 @@ import Data.Foldable (find)
 import Data.IORef
 import GHC.Generics (Generic)
 import Network.Wai.Handler.Warp (run)
-import Servant
+import Servant hiding (BasicAuth)
 import Servant.ACL
 import Servant.API.Generic
 import Servant.Auth.Server
 import Servant.Server.Generic
+
+data WholeAPI a = WholeAPI
+  { dogsAPI :: a :- Auth '[BasicAuth] User :> ToServantApi DogsAPI
+  }
+
+server :: WholeAPI (AsServerT Kennel)
+server = WholeAPI { dogsAPI = toServant dogsServer }
+
+acl :: WholeAPI (AsACLT Kennel)
+acl = WholeAPI { dogsAPI = toServant dogsACL }
 
 -- We define the API as usual
 data DogsAPI a = DogsAPI
@@ -58,10 +71,10 @@ data Dog = Dog
   }
   deriving (Eq, Show, Read, Generic, ToJSON, FromJSON)
 
-dogsServer :: DogsAPI (AsServerT Kennel)
-dogsServer = DogsAPI
-  { getDog = getDogHandler
-  , newPuppy = newPuppyHandler
+dogsServer :: User -> DogsAPI (AsServerT Kennel)
+dogsServer user = DogsAPI
+  { getDog = getDogHandler user
+  , newPuppy = newPuppyHandler user
   }
 
 -- We also do authentication. Here we use servant-auth, but anything else would
@@ -72,10 +85,10 @@ data User = User
 
 -- This section is new. Its structure mimics that of the server we're
 -- augmenting with ACL
-dogsACL :: DogsAPI (AsACLT Kennel)
-dogsACL = DogsAPI
-  { getDog = getDogACL
-  , newPuppy = newPuppyACL
+dogsACL :: User -> DogsAPI (AsACLT Kennel)
+dogsACL user = DogsAPI
+  { getDog = getDogACL user
+  , newPuppy = newPuppyACL user
   }
 
 newtype Kennel a = Kennel { getKennel :: ReaderT (IORef [Dog]) Handler a }
@@ -88,24 +101,33 @@ getDogHandler _user name' = do
   dogs <- liftIO . readIORef =<< ask
   case find (\x -> name x == name') dogs of
     Nothing -> throwError $ err404
-    Just dog -> pure dog
+    Just dog -> pure $
+        dog
 
--- | Here are the permission-related checks
+-- | Here are the permission-related checks.
 getDogACL :: User -> String -> Kennel ()
 getDogACL user name' = do
   when (username user == "jkarni") $
     throwError err401
 
-newPuppyHandler :: String -> Kennel Dog
-newPuppyHandler = _
+-- | Again the handler as usual.
+newPuppyHandler :: User -> String -> Kennel Dog
+newPuppyHandler user name' = do
+  dogs <- liftIO . readIORef =<< ask
+  links <- linkIfAuthorized acl (\x -> newPuppy (_ $ dogsAPI x) name')
+  case find (\x -> name x == name') dogs of
+    Nothing -> throwError $ err404
+    Just dog ->
+        pure dog
 
-newPuppyACL :: String -> Kennel ()
-newPuppyACL = _
+-- | And again its permissions check.
+newPuppyACL :: User -> String -> Kennel ()
+newPuppyACL _ _ = pure ()
 
 
 main :: IO ()
 main = do
   ref <- newIORef []
   let nat hdl = runReaderT (getKennel hdl) ref
-  run 8080 $ serveTWithACL (Proxy :: Proxy DogsAPI) nat dogsACL dogsServer
+  run 8080 $ serveTWithACL (Proxy :: Proxy WholeAPI) nat acl server
 ~~~

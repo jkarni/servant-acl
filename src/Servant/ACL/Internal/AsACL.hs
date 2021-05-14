@@ -1,6 +1,6 @@
 {-# LANGUAGE UndecidableInstances #-}
 
-module Servant.ACL.Internal.Classes where
+module Servant.ACL.Internal.AsACL where
 
 import Servant
 import Servant.API.Generic
