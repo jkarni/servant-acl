@@ -42,6 +42,7 @@ library:
     - DeriveFoldable
     - DeriveTraversable
     - DerivingStrategies
+    - ExistentialQuantification
     - FlexibleContexts
     - FlexibleInstances
     - GeneralizedNewtypeDeriving
