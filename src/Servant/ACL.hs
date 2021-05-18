@@ -5,6 +5,10 @@ module Servant.ACL
     noACL,
     withACL,
     withACL_,
+    allAuthorizedLinks,
+    allAuthorizedFieldLinks,
+    Link,
+    AsAuthorizedLink,
     HalLinks (..),
     Linked (..),
   )

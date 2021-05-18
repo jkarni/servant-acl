@@ -36,6 +36,41 @@ linkIfAuthorized routes getter = do
       (Link mempty mempty mempty)
 -}
 
+allAuthorizedLinks ::
+  (Monad m, HasAuthorizedLink api) =>
+  Proxy api ->
+  Proxy m ->
+  ServerT api (WithACL m) ->
+  MkAuthorizedLink api (m Link)
+allAuthorizedLinks api m server =
+  toAuthorizedLink id api server m (Link mempty mempty mempty)
+
+allAuthorizedFieldLinks ::
+  forall m routes.
+  ( Monad m,
+    ToServant routes (AsServerT (WithACL m))
+      ~ ServerT (ToServantApi routes) (WithACL m),
+    GenericServant routes (AsServerT (WithACL m)),
+    GenericServant routes AsApi,
+    GenericServant routes (AsAuthorizedLink (m Link)),
+    ToServant routes (AsAuthorizedLink (m Link))
+      ~ MkAuthorizedLink (ToServantApi routes) (m Link),
+    HasAuthorizedLink (ToServantApi routes)
+  ) =>
+  routes (AsServerT (WithACL m)) ->
+  routes (AsAuthorizedLink (m Link))
+allAuthorizedFieldLinks server =
+  fromServant $
+    allAuthorizedLinks
+      (Proxy :: Proxy (ToServantApi routes))
+      (Proxy :: Proxy m)
+      (toServant server)
+
+data AsAuthorizedLink a
+
+instance GenericMode (AsAuthorizedLink a) where
+  type (AsAuthorizedLink a) :- api = MkAuthorizedLink api a
+
 -- * HasAuthorizedLink
 
 -- | Like HasLink, but uses the same arguments as HasACL.

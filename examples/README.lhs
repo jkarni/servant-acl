@@ -32,6 +32,7 @@ Below is a fairly extensive annotated example of usage.
 {-# LANGUAGE DataKinds #-}
 {-# LANGUAGE DeriveAnyClass #-}
 {-# LANGUAGE DeriveGeneric #-}
+{-# LANGUAGE DerivingStrategies #-}
 {-# LANGUAGE GeneralizedNewtypeDeriving #-}
 {-# LANGUAGE OverloadedLabels #-}
 {-# LANGUAGE OverloadedStrings #-}
@@ -43,9 +44,8 @@ import Data.Foldable (find)
 import Data.IORef
 import Data.Text.Encoding (decodeUtf8)
 import Data.Text (unpack)
-import GHC.Generics (Generic)
 import Network.Wai.Handler.Warp (run)
-import Servant
+import Servant hiding (Link)
 import Servant.ACL
 import Servant.API.Generic
 import Servant.Server.Generic
@@ -85,7 +85,7 @@ data User = User
 
 
 newtype Kennel a = Kennel { getKennel :: ReaderT (IORef [Dog]) Handler a }
-  deriving (Functor, Applicative, Monad, MonadError ServerError,
+  deriving newtype (Functor, Applicative, Monad, MonadError ServerError,
             MonadReader (IORef [Dog]), MonadIO)
 
 -- | Here we have the handler as usual.
@@ -105,16 +105,16 @@ getDogACL user name' = do
 -- | Again the handler as usual.
 newPuppyHandler :: User -> String -> Kennel Dog
 newPuppyHandler user name' = do
-  dogs <- liftIO . readIORef =<< ask
-  case find (\x -> name x == name') dogs of
-    Nothing -> throwError $ err404
-    Just dog ->
-        pure dog
+  let dog = (Dog name' 0)
+  ask >>= \r -> liftIO $ modifyIORef r (dog :)
+  pure dog
 
 -- | And again its permissions check.
 newPuppyACL :: User -> String -> Kennel ()
 newPuppyACL _ _ = pure ()
 
+links :: WholeAPI (AsAuthorizedLink (Kennel Link))
+links = allAuthorizedFieldLinks server
 
 main :: IO ()
 main = do
