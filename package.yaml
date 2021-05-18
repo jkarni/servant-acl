@@ -23,6 +23,7 @@ dependencies:
 - base >= 4.7 && < 5
 - aeson
 - containers
+- mtl
 - network-uri
 - network-uri-json
 - servant
@@ -49,6 +50,7 @@ library:
     - KindSignatures
     - MultiParamTypeClasses
     - OverloadedStrings
+    - PolyKinds
     - RankNTypes
     - ScopedTypeVariables
     - TypeFamilies

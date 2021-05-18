@@ -61,7 +61,7 @@ server = WholeAPI { dogsAPI = toServant . dogsServer }
 -- We define the API as usual
 data DogsAPI a = DogsAPI
   { getDog :: a :- Capture "name" String :> Get '[JSON] Dog
-  , newPuppy :: a :- ReqBody '[JSON] String :> Post '[JSON] Dog
+  , newPuppy :: a :- ReqBody '[JSON] String :> Post '[JSON] (Linked Dog)
   }
   deriving (Generic)
 
@@ -73,8 +73,8 @@ data Dog = Dog
 
 dogsServer :: User -> DogsAPI (AsServerT (WithACL Kennel))
 dogsServer user = DogsAPI
-  { getDog = \name -> getDogHandler user name `withACL_` getDogACL user name
-  , newPuppy = \name -> newPuppyHandler user name `withACL_` newPuppyACL user name
+  { getDog = \name' -> getDogHandler user name' `withACL_` getDogACL user name'
+  , newPuppy = \name' -> newPuppyHandler user name' `withACL_` newPuppyACL user name'
   }
 
 -- We also do authentication. Here we use servant-auth, but anything else would
@@ -98,16 +98,19 @@ getDogHandler _user name' = do
 
 -- | Here are the permission-related checks.
 getDogACL :: User -> String -> Kennel ()
-getDogACL user name' = do
+getDogACL user _name' = do
   when (username user == "jkarni") $
     throwError err401
 
 -- | Again the handler as usual.
-newPuppyHandler :: User -> String -> Kennel Dog
+newPuppyHandler :: User -> String -> Kennel (Linked Dog)
 newPuppyHandler user name' = do
   let dog = (Dog name' 0)
   ask >>= \r -> liftIO $ modifyIORef r (dog :)
-  pure dog
+  let dogLinks :: DogsAPI (AsAuthorizedLink (Kennel Link))
+      dogLinks = fromServant $ dogsAPI links user
+  dog `withLinks`
+    [("self", getDog dogLinks name' )]
 
 -- | And again its permissions check.
 newPuppyACL :: User -> String -> Kennel ()

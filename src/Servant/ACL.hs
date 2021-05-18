@@ -7,6 +7,7 @@ module Servant.ACL
     withACL_,
     allAuthorizedLinks,
     allAuthorizedFieldLinks,
+    withLinks,
     Link,
     AsAuthorizedLink,
     HalLinks (..),

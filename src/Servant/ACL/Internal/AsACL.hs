@@ -3,9 +3,6 @@
 module Servant.ACL.Internal.AsACL where
 
 import Control.Monad
-import Servant
-import Servant.API.Generic
-import Servant.Server.Generic
 
 data WithACL m a
   = forall b.
@@ -15,7 +12,7 @@ data WithACL m a
       }
 
 runWithACL :: Monad m => WithACL m a -> m a
-runWithACL (WithACL check handler) = check >>= handler
+runWithACL (WithACL check hdl) = check >>= hdl
 
 runJustACL :: (Functor m) => WithACL m a -> m ()
 runJustACL (WithACL check _) = void check
@@ -26,9 +23,9 @@ noACL h = withACL_ h (pure ())
 
 -- | Construct a `WithACL`. The second argument is the check.
 withACL :: (b -> m a) -> m b -> WithACL m a
-withACL handler acl = WithACL acl handler
+withACL hdl acl = WithACL acl hdl
 
 -- | Like `withACL`, but specialized for the case when the check is `m ()`, and
 -- so the handler doesn't need the extra argument.
 withACL_ :: m a -> m () -> WithACL m a
-withACL_ handler acl = withACL (const handler) acl
+withACL_ hdl acl = withACL (const hdl) acl

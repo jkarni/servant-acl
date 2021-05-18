@@ -5,7 +5,7 @@
 
 module Servant.ACL.Internal.HasAuthorizedLinks where
 
-import Data.List (foldl')
+import Data.List (foldl', intercalate)
 import Data.Proxy
 import qualified Data.Text as Text
 import GHC.TypeLits (KnownSymbol, symbolVal)
@@ -66,7 +66,7 @@ allAuthorizedFieldLinks server =
       (Proxy :: Proxy m)
       (toServant server)
 
-data AsAuthorizedLink a
+data AsAuthorizedLink (a :: *)
 
 instance GenericMode (AsAuthorizedLink a) where
   type (AsAuthorizedLink a) :- api = MkAuthorizedLink api a
@@ -117,7 +117,7 @@ simpleToLink toA _ l = toAuthorizedLink toA (Proxy :: Proxy sub) l
 -- Naked symbol instance
 instance (KnownSymbol sym, HasAuthorizedLink sub) => HasAuthorizedLink (sym :> sub) where
   type MkAuthorizedLink (sym :> sub) a = MkAuthorizedLink sub a
-  toAuthorizedLink toA pEp servEp pm =
+  toAuthorizedLink toA _pEp servEp pm =
     toAuthorizedLink toA (Proxy :: Proxy sub) servEp pm . addSegment (escaped seg)
     where
       seg = symbolVal (Proxy :: Proxy sym)
@@ -126,6 +126,23 @@ instance (KnownSymbol sym, HasAuthorizedLink sub) => HasAuthorizedLink (sym :> s
 instance HasAuthorizedLink (Verb m s ct a) where
   type MkAuthorizedLink (Verb m s ct a) r = r
   toAuthorizedLink toA _pEp servEp _pm link = runJustACL servEp >> pure (toA link)
+
+-- Capture
+instance
+  (ToHttpApiData v, SBoolI (FoldLenient mods), HasAuthorizedLink sub) =>
+  HasAuthorizedLink (Capture' mods sym v :> sub)
+  where
+  type
+    MkAuthorizedLink (Capture' mods sym v :> sub) a =
+      If (FoldLenient mods) (Either String v) v -> MkAuthorizedLink sub a
+  toAuthorizedLink toA _pEp servEp pm link = \arg ->
+    let seg = case sbool :: SBool (FoldLenient mods) of
+          STrue -> case arg of
+            Left s -> Escaped s
+            Right v -> escaped . Text.unpack $ toUrlPiece v
+          SFalse -> escaped . Text.unpack $ toUrlPiece arg
+     in toAuthorizedLink toA (Proxy :: Proxy sub) (servEp arg) pm $
+          addSegment seg link
 
 -- QueryParam instances
 instance
@@ -166,6 +183,20 @@ instance
     where
       k = symbolVal (Proxy :: Proxy sym)
 
+instance HasAuthorizedLink sub => HasAuthorizedLink (ReqBody' mods ct a :> sub) where
+  type
+    MkAuthorizedLink (ReqBody' mods ct a :> sub) r =
+      If (FoldLenient mods) (Either String a) a -> MkAuthorizedLink sub r
+  toAuthorizedLink toA _pEp servEp pm link = \arg ->
+    toAuthorizedLink toA (Proxy :: Proxy sub) (servEp arg) pm link
+
+instance HasAuthorizedLink sub => HasAuthorizedLink (BasicAuth scope a :> sub) where
+  type
+    MkAuthorizedLink (BasicAuth scope a :> sub) r =
+      a -> MkAuthorizedLink sub r
+  toAuthorizedLink toA _pEp servEp pm link = \arg ->
+    toAuthorizedLink toA (Proxy :: Proxy sub) (servEp arg) pm link
+
 {-
 instance
   (KnownSymbol sym, HasAuthorizedLink sub) =>
@@ -180,9 +211,6 @@ instance
       k = symbolVal (Proxy :: Proxy sym)
 
 -- Misc instances
-instance HasAuthorizedLink sub => HasAuthorizedLink (ReqBody' mods ct a :> sub) where
-  type MkAuthorizedLink (ReqBody' mods ct a :> sub) r = MkAuthorizedLink sub r
-  toAuthorizedLink toA _ = toAuthorizedLink toA (Proxy :: Proxy sub)
 
 instance HasAuthorizedLink sub => HasAuthorizedLink (StreamBody' mods framing ct a :> sub) where
   type MkAuthorizedLink (StreamBody' mods framing ct a :> sub) r = MkAuthorizedLink sub r
@@ -325,3 +353,49 @@ addQueryParam qp l =
 
 addFragment :: Fragment' -> Link -> Link
 addFragment fr l = l {_fragment = fr}
+
+linkURI :: Link -> URI
+linkURI = linkURI' LinkArrayElementBracket
+
+-- | How to encode array query elements.
+data LinkArrayElementStyle
+  = -- | @foo[]=1&foo[]=2@
+    LinkArrayElementBracket
+  | -- | @foo=1&foo=2@
+    LinkArrayElementPlain
+  deriving (Eq, Ord, Show, Enum, Bounded)
+
+-- | Configurable 'linkURI'.
+--
+-- >>> type API = "sum" :> QueryParams "x" Int :> Get '[JSON] Int
+-- >>> linkURI' LinkArrayElementBracket $ safeLink (Proxy :: Proxy API) (Proxy :: Proxy API) [1, 2, 3]
+-- sum?x[]=1&x[]=2&x[]=3
+--
+-- >>> linkURI' LinkArrayElementPlain $ safeLink (Proxy :: Proxy API) (Proxy :: Proxy API) [1, 2, 3]
+-- sum?x=1&x=2&x=3
+linkURI' :: LinkArrayElementStyle -> Link -> URI
+linkURI' addBrackets (Link segments q_params mfragment) =
+  URI
+    mempty -- No scheme (relative)
+    Nothing -- Or authority (relative)
+    (intercalate "/" $ map getEscaped segments)
+    (makeQueries q_params)
+    (makeFragment mfragment)
+  where
+    makeQueries :: [Param] -> String
+    makeQueries [] = ""
+    makeQueries xs =
+      "?" <> intercalate "&" (fmap makeQuery xs)
+    makeQuery :: Param -> String
+    makeQuery (ArrayElemParam k v) = escape k <> style <> escape (Text.unpack v)
+    makeQuery (SingleParam k v) = escape k <> "=" <> escape (Text.unpack v)
+    makeQuery (FlagParam k) = escape k
+    makeFragment :: Fragment' -> String
+    makeFragment Nothing = ""
+    makeFragment (Just fr) = "#" <> escape fr
+    style = case addBrackets of
+      LinkArrayElementBracket -> "[]="
+      LinkArrayElementPlain -> "="
+
+escape :: String -> String
+escape = escapeURIString isUnreserved

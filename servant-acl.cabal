@@ -33,12 +33,13 @@ library
       Paths_servant_acl
   hs-source-dirs:
       src
-  default-extensions: DataKinds DeriveAnyClass DeriveGeneric DeriveFunctor DeriveFoldable DeriveTraversable DerivingStrategies ExistentialQuantification FlexibleContexts FlexibleInstances GeneralizedNewtypeDeriving KindSignatures MultiParamTypeClasses OverloadedStrings RankNTypes ScopedTypeVariables TypeFamilies TypeOperators
+  default-extensions: DataKinds DeriveAnyClass DeriveGeneric DeriveFunctor DeriveFoldable DeriveTraversable DerivingStrategies ExistentialQuantification FlexibleContexts FlexibleInstances GeneralizedNewtypeDeriving KindSignatures MultiParamTypeClasses OverloadedStrings PolyKinds RankNTypes ScopedTypeVariables TypeFamilies TypeOperators
   ghc-options: -Wall
   build-depends:
       aeson
     , base >=4.7 && <5
     , containers
+    , mtl
     , network-uri
     , network-uri-json
     , servant
@@ -79,7 +80,7 @@ test-suite spec
       Paths_servant_acl
   hs-source-dirs:
       test
-  default-extensions: DataKinds DeriveAnyClass DeriveGeneric DeriveFunctor DeriveFoldable DeriveTraversable DerivingStrategies ExistentialQuantification FlexibleContexts FlexibleInstances GeneralizedNewtypeDeriving KindSignatures MultiParamTypeClasses OverloadedStrings RankNTypes ScopedTypeVariables TypeFamilies TypeOperators
+  default-extensions: DataKinds DeriveAnyClass DeriveGeneric DeriveFunctor DeriveFoldable DeriveTraversable DerivingStrategies ExistentialQuantification FlexibleContexts FlexibleInstances GeneralizedNewtypeDeriving KindSignatures MultiParamTypeClasses OverloadedStrings PolyKinds RankNTypes ScopedTypeVariables TypeFamilies TypeOperators
   ghc-options: -Wall -threaded -rtsopts -with-rtsopts=-N
   build-depends:
       aeson
@@ -87,6 +88,7 @@ test-suite spec
     , base >=4.7 && <5
     , containers
     , hspec
+    , mtl
     , network-uri
     , network-uri-json
     , servant
