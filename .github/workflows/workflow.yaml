@@ -1,0 +1,18 @@
+on: [push]
+name: build
+jobs:
+  stack:
+    name: Stack build and test
+    runs-on: ubuntu-latest # or macOS-latest, or windows-latest
+    steps:
+      - uses: actions/checkout@v2
+      - uses: haskell/actions/setup@v1
+        with:
+          ghc-version: '8.8.3' # Exact version of ghc to use
+          # cabal-version: 'latest'. Omitted, but defaults to 'latest'
+          enable-stack: true
+          stack-version: 'latest'
+      - name: Build
+        run: stack build
+      - name: Test
+        run: stack test
