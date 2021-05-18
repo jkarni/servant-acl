@@ -5,6 +5,6 @@ extra-deps:
 - network-uri-json-0.4.0.0@sha256:db352d12654c4cf218098d91d4b3f1c5eef0f8afae2f93bd1b989595caf3a738,2092
 allow-newer: true
 nix:
-  enable: true
+  enable: false
   packages:
     - zlib
