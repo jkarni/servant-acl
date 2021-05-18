@@ -1,11 +1,10 @@
 module Servant.ACL
-  ( AsACL,
-    AsACLT,
-    AndThen,
-    serveWithACL,
-    serveTWithACL,
-    serveTWithACLAndContext,
-    linkIfAuthorized,
+  ( WithACL,
+    runWithACL,
+    runJustACL,
+    noACL,
+    withACL,
+    withACL_,
     HalLinks (..),
     Linked (..),
   )

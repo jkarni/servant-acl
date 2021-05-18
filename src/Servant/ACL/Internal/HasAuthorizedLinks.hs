@@ -10,30 +10,31 @@ import Data.Proxy
 import qualified Data.Text as Text
 import GHC.TypeLits (KnownSymbol, symbolVal)
 import Network.URI (escapeURIString, isUnreserved)
+import Servant (ServerT)
 import Servant.ACL.Internal.AsACL
 import Servant.API hiding (Link)
 import Servant.API.Generic
-import Servant.API.Modifiers (FoldRequired)
+import Servant.API.Modifiers (FoldLenient, FoldRequired, RequestArgument)
 import Servant.Server.Experimental.Auth
+import Servant.Server.Generic
 
+{-
 linkIfAuthorized ::
-  forall routes m check.
+  forall routes m check x.
   ( Applicative m,
-    AndThen check (m (MkAuthorizedLink check Link)),
     HasAuthorizedLink check,
     IsElem check (ToServantApi routes)
   ) =>
-  routes (AsACLT m) ->
-  (routes (AsACLT m) -> check) ->
+  routes (AsServerT (WithACL m)) ->
+  (forall m. routes (AsServerT m) -> x) ->
   m (MkAuthorizedLink check Link)
 linkIfAuthorized routes getter = do
-  getter routes
-    `andThen` ( pure $
-                  toAuthorizedLink
-                    id
-                    (Proxy :: Proxy check)
-                    (Link mempty mempty mempty)
-              )
+  pure $
+    toAuthorizedLink
+      id
+      (Proxy :: Proxy check)
+      (Link mempty mempty mempty)
+-}
 
 -- * HasAuthorizedLink
 
@@ -41,11 +42,16 @@ linkIfAuthorized routes getter = do
 class HasAuthorizedLink endpoint where
   type MkAuthorizedLink endpoint a
   toAuthorizedLink ::
+    forall a m.
+    Monad m =>
     (Link -> a) ->
     Proxy endpoint ->
+    ServerT endpoint (WithACL m) ->
+    Proxy m ->
     Link ->
-    MkAuthorizedLink endpoint a
+    MkAuthorizedLink endpoint (m a)
 
+{-
 -- | Helper for implementing 'toAuthorizedLink' for combinators not affecting link
 -- structure. Different than the simpleToLink in Servant.Links in that it uses
 -- a const rather than dropping the argument.
@@ -54,12 +60,11 @@ simpleToLink' ::
   ( HasAuthorizedLink sub,
     (x -> MkAuthorizedLink sub a) ~ MkAuthorizedLink (combinator :> sub) a
   ) =>
-  Proxy sub ->
   (Link -> a) ->
   Proxy (combinator :> sub) ->
   Link ->
   MkAuthorizedLink (combinator :> sub) a
-simpleToLink' _ toA _ l = const $ toAuthorizedLink toA (Proxy :: Proxy sub) l
+simpleToLink' toA _ l = const $ toAuthorizedLink toA (Proxy :: Proxy sub) l
 
 simpleToLink ::
   forall sub a combinator.
@@ -71,91 +76,62 @@ simpleToLink ::
   Proxy (combinator :> sub) ->
   Link ->
   MkAuthorizedLink (combinator :> sub) a
-simpleToLink _ toA _ l = toAuthorizedLink toA (Proxy :: Proxy sub) l
-
--- Remember kids, always export everything - create internal modules if need be.
---
-
-data Link
-  = Link
-      { _segments :: [Escaped],
-        _queryParams :: [Param],
-        _fragment :: Fragment'
-      }
-  deriving (Show)
-
--- | Query parameter.
-data Param
-  = SingleParam String Text.Text
-  | ArrayElemParam String Text.Text
-  | FlagParam String
-  deriving (Show)
-
-newtype Escaped = Escaped String
-
-type Fragment' = Maybe String
-
-instance Show Escaped where
-  showsPrec d (Escaped s) = showsPrec d s
-  show (Escaped s) = show s
-
-escaped :: String -> Escaped
-escaped = Escaped . escapeURIString isUnreserved
-
-getEscaped :: Escaped -> String
-getEscaped (Escaped s) = s
-
-linkSegments :: Link -> [String]
-linkSegments = map getEscaped . _segments
-
-addSegment :: Escaped -> Link -> Link
-addSegment seg l = l {_segments = _segments l <> [seg]}
-
-addQueryParam :: Param -> Link -> Link
-addQueryParam qp l =
-  l {_queryParams = _queryParams l <> [qp]}
-
-addFragment :: Fragment' -> Link -> Link
-addFragment fr l = l {_fragment = fr}
-
--- From here on we copy the HasLink code, modifying some places so that
--- parameters are still used.
--- It is quite inelegant.
+simpleToLink toA _ l = toAuthorizedLink toA (Proxy :: Proxy sub) l
+-}
 
 -- Naked symbol instance
 instance (KnownSymbol sym, HasAuthorizedLink sub) => HasAuthorizedLink (sym :> sub) where
   type MkAuthorizedLink (sym :> sub) a = MkAuthorizedLink sub a
-  toAuthorizedLink toA _ =
-    toAuthorizedLink toA (Proxy :: Proxy sub) . addSegment (escaped seg)
+  toAuthorizedLink toA pEp servEp pm =
+    toAuthorizedLink toA (Proxy :: Proxy sub) servEp pm . addSegment (escaped seg)
     where
       seg = symbolVal (Proxy :: Proxy sym)
 
+-- Verb (terminal) instances
+instance HasAuthorizedLink (Verb m s ct a) where
+  type MkAuthorizedLink (Verb m s ct a) r = r
+  toAuthorizedLink toA _pEp servEp _pm link = runJustACL servEp >> pure (toA link)
+
 -- QueryParam instances
 instance
-  (KnownSymbol sym, ToHttpApiData v, HasAuthorizedLink sub, SBoolI (FoldRequired mods)) =>
+  ( KnownSymbol sym,
+    ToHttpApiData v,
+    HasAuthorizedLink sub,
+    SBoolI (FoldLenient mods),
+    SBoolI (FoldRequired mods)
+  ) =>
   HasAuthorizedLink (QueryParam' mods sym v :> sub)
   where
-  type MkAuthorizedLink (QueryParam' mods sym v :> sub) a = If (FoldRequired mods) v (Maybe v) -> MkAuthorizedLink sub a
-  toAuthorizedLink toA _ l mv =
-    toAuthorizedLink toA (Proxy :: Proxy sub) $
-      case sbool :: SBool (FoldRequired mods) of
-        STrue -> (addQueryParam . SingleParam k . toQueryParam) mv l
-        SFalse -> maybe id (addQueryParam . SingleParam k . toQueryParam) mv l
+  type MkAuthorizedLink (QueryParam' mods sym v :> sub) a = RequestArgument mods v -> MkAuthorizedLink sub a
+  toAuthorizedLink toA _pEp servEp pm link = \arg ->
+    toAuthorizedLink toA (Proxy :: Proxy sub) (servEp arg) pm $
+      case (sbool :: SBool (FoldRequired mods), sbool :: SBool (FoldLenient mods)) of
+        (STrue, STrue) -> (addQueryParam . SingleParam k . toQueryParam) arg link
+        (STrue, SFalse) -> (addQueryParam . SingleParam k . toQueryParam) arg link
+        (SFalse, STrue) -> maybe id (addQueryParam . SingleParam k . toQueryParam) arg link
+        (SFalse, SFalse) -> maybe id (addQueryParam . SingleParam k . toQueryParam) arg link
     where
       k :: String
       k = symbolVal (Proxy :: Proxy sym)
+
+instance (HasAuthorizedLink a, HasAuthorizedLink b) => HasAuthorizedLink (a :<|> b) where
+  type MkAuthorizedLink (a :<|> b) r = MkAuthorizedLink a r :<|> MkAuthorizedLink b r
+  toAuthorizedLink toA _pEp (servL :<|> servR) pm link =
+    toAuthorizedLink toA (Proxy :: Proxy a) servL pm link
+      :<|> toAuthorizedLink toA (Proxy :: Proxy b) servR pm link
 
 instance
   (KnownSymbol sym, ToHttpApiData v, HasAuthorizedLink sub) =>
   HasAuthorizedLink (QueryParams sym v :> sub)
   where
   type MkAuthorizedLink (QueryParams sym v :> sub) a = [v] -> MkAuthorizedLink sub a
-  toAuthorizedLink toA _ l =
-    toAuthorizedLink toA (Proxy :: Proxy sub)
-      . foldl' (\l' v -> addQueryParam (ArrayElemParam k (toQueryParam v)) l') l
+  toAuthorizedLink toA _pEp servEp pm link = \args ->
+    toAuthorizedLink toA (Proxy :: Proxy sub) (servEp args) pm $
+      foldl' (\l' v -> addQueryParam (ArrayElemParam k (toQueryParam v)) l') link args
     where
       k = symbolVal (Proxy :: Proxy sym)
 
+{-
 instance
   (KnownSymbol sym, HasAuthorizedLink sub) =>
   HasAuthorizedLink (QueryFlag sym :> sub)
@@ -167,11 +143,6 @@ instance
     toAuthorizedLink toA (Proxy :: Proxy sub) $ addQueryParam (FlagParam k) l
     where
       k = symbolVal (Proxy :: Proxy sym)
-
--- :<|> instance - Generate all links at once
-instance (HasAuthorizedLink a, HasAuthorizedLink b) => HasAuthorizedLink (a :<|> b) where
-  type MkAuthorizedLink (a :<|> b) r = MkAuthorizedLink a r :<|> MkAuthorizedLink b r
-  toAuthorizedLink toA _ l = toAuthorizedLink toA (Proxy :: Proxy a) l :<|> toAuthorizedLink toA (Proxy :: Proxy b) l
 
 -- Misc instances
 instance HasAuthorizedLink sub => HasAuthorizedLink (ReqBody' mods ct a :> sub) where
@@ -272,3 +243,50 @@ instance
   toAuthorizedLink toA _ l mv =
     toAuthorizedLink toA (Proxy :: Proxy sub) $
       addFragment ((Just . Text.unpack . toQueryParam) mv) l
+-}
+
+-- Copying the datatype over from servant
+-- Remember kids, always export everything - create internal modules if need be.
+--
+
+data Link
+  = Link
+      { _segments :: [Escaped],
+        _queryParams :: [Param],
+        _fragment :: Fragment'
+      }
+  deriving (Show)
+
+-- | Query parameter.
+data Param
+  = SingleParam String Text.Text
+  | ArrayElemParam String Text.Text
+  | FlagParam String
+  deriving (Show)
+
+newtype Escaped = Escaped String
+
+type Fragment' = Maybe String
+
+instance Show Escaped where
+  showsPrec d (Escaped s) = showsPrec d s
+  show (Escaped s) = show s
+
+escaped :: String -> Escaped
+escaped = Escaped . escapeURIString isUnreserved
+
+getEscaped :: Escaped -> String
+getEscaped (Escaped s) = s
+
+linkSegments :: Link -> [String]
+linkSegments = map getEscaped . _segments
+
+addSegment :: Escaped -> Link -> Link
+addSegment seg l = l {_segments = _segments l <> [seg]}
+
+addQueryParam :: Param -> Link -> Link
+addQueryParam qp l =
+  l {_queryParams = _queryParams l <> [qp]}
+
+addFragment :: Fragment' -> Link -> Link
+addFragment fr l = l {_fragment = fr}
