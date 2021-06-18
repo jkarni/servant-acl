@@ -8,6 +8,7 @@ stdenv.mkDerivation {
   buildInputs = [
     stack
     haskell.compiler.ghc8104
+    nodejs
     zlib
   ];
 }

@@ -1,0 +1,1 @@
+import{R as e,l as t,a as n}from"./vendor.e10902dd.js";const r=n=>e.createElement(t.HydraAdmin,{entrypoint:n.entrypoint}),o=e.createElement(r,{entrypoint:"/"});n.render(o,document.getElementById("root"));
