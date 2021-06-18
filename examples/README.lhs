@@ -121,6 +121,7 @@ links = allAuthorizedFieldLinks server
 
 main :: IO ()
 main = do
+  putStrLn "servant-acl example"
   ref <- newIORef []
   let nat hdl = runReaderT (getKennel $ runWithACL hdl) ref
       api = genericApi (Proxy :: Proxy WholeAPI)

@@ -48,8 +48,7 @@ library
     , unordered-containers
   default-language: Haskell2010
 
-test-suite readme
-  type: exitcode-stdio-1.0
+executable readme
   main-is: examples/README.lhs
   other-modules:
       Paths_servant_acl

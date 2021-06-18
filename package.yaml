@@ -58,18 +58,6 @@ library:
 
 tests:
 
-  readme:
-    main: examples/README.lhs
-    ghc-options:
-    - -pgmL markdown-unlit
-    dependencies:
-    - markdown-unlit
-    - mtl
-    - servant-acl
-    - servant-auth
-    - servant-auth-server
-    - warp
-
   spec:
     main:                Spec.hs
     source-dirs:         test
@@ -83,6 +71,20 @@ tests:
     - servant-acl
     - hspec
     default-extensions: *many-extensions
+
+
+executables:
+  readme:
+    main: examples/README.lhs
+    ghc-options:
+    - -pgmL markdown-unlit
+    dependencies:
+    - markdown-unlit
+    - mtl
+    - servant-acl
+    - servant-auth
+    - servant-auth-server
+    - warp
 
 
 
