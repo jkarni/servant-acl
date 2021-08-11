@@ -66,6 +66,15 @@ instance ToJSON a => ToJSON (Linked a) where
     Object o -> Object $ HMap.insert "_links" (toJSON $ _links l) o
     v ->
       object
-        [ "_links" .= (toJSON $ _links l),
+        [ "_links" .= toJSON (_links l),
           "value" .= v
         ]
+
+instance FromJSON a => FromJSON (Linked a) where
+  parseJSON = withObject "Linked" $ \o -> do
+    val <- parseJSON (Object $ HMap.delete "_links" o)
+    l <- o .: "_links"
+    pure $ Linked {
+      _links = l,
+      value = val
+    }
