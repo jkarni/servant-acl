@@ -77,8 +77,7 @@ dogsServer user = DogsAPI
   , newPuppy = \name' -> newPuppyHandler user name' `withACL_` newPuppyACL user name'
   }
 
--- We also do authentication. Here we use servant-auth, but anything else would
--- also work
+-- We also do authentication.
 data User = User
   { username :: String
   }

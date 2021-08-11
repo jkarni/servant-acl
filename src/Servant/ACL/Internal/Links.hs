@@ -18,7 +18,7 @@ import qualified Data.Text as T
 import GHC.Exts (IsList, IsString)
 import GHC.Generics (Generic)
 import Network.URI (URI)
-import Network.URI.JSON ()
+import Crypto.JOSE.Types ()
 import Servant.ACL.Internal.HasAuthorizedLinks
 
 newtype Rel = Rel {getRel :: T.Text}

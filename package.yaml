@@ -25,7 +25,7 @@ dependencies:
 - containers
 - mtl
 - network-uri
-- network-uri-json
+- jose
 - servant
 - servant-server
 - text
