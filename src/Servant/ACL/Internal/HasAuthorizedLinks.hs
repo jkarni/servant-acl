@@ -13,7 +13,7 @@ import Network.URI (escapeURIString, isUnreserved)
 import Servant (ServerT)
 import Servant.ACL.Internal.AsACL
 import qualified Servant.Auth as SAuth
-import qualified Servant.Auth.Server as SAuth
+import qualified Servant.Auth.Server as SAuth ()
 import Servant.API hiding (Link)
 import Servant.API.Generic
 import Servant.API.Modifiers (FoldLenient, FoldRequired, RequestArgument)
@@ -206,7 +206,7 @@ instance HasAuthorizedLink sub => HasAuthorizedLink (BasicAuth scope a :> sub) w
 instance HasAuthorizedLink sub => HasAuthorizedLink (SAuth.Auth auths a :> sub) where
   type
     MkAuthorizedLink (SAuth.Auth auths a :> sub) r =
-      SAuth.AuthResult a -> MkAuthorizedLink sub r
+      a -> MkAuthorizedLink sub r
   toAuthorizedLink toA _pEp servEp pm link = \arg ->
     toAuthorizedLink toA (Proxy :: Proxy sub) (servEp arg) pm link
 {-

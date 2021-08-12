@@ -11,6 +11,32 @@ packages:
       sha256: e7a5584a406eb3b8224160227863fc6a21b5fadab066cd8ab113cb3ba22ce43c
   original:
     hackage: network-uri-json-0.4.0.0@sha256:db352d12654c4cf218098d91d4b3f1c5eef0f8afae2f93bd1b989595caf3a738,2092
+- completed:
+    size: 37240
+    subdir: servant-auth
+    url: https://github.com/haskell-servant/servant-auth/archive/459fff505e5ab80b7103f335b30b56fd8170f5cc.tar.gz
+    name: servant-auth
+    version: 0.3.2.0
+    sha256: 7e0facb59b66e9e66712536fa6d1d79c90d2f13c4be32e2c3587d074606a90b5
+    pantry-tree:
+      size: 426
+      sha256: e66354dea6ac70b9209a89c7dd02cd3b09cb2ac54823ed766b5113e3779092bc
+  original:
+    subdir: servant-auth
+    url: https://github.com/haskell-servant/servant-auth/archive/459fff505e5ab80b7103f335b30b56fd8170f5cc.tar.gz
+- completed:
+    size: 37240
+    subdir: servant-auth-server
+    url: https://github.com/haskell-servant/servant-auth/archive/459fff505e5ab80b7103f335b30b56fd8170f5cc.tar.gz
+    name: servant-auth-server
+    version: 0.4.5.1
+    sha256: 7e0facb59b66e9e66712536fa6d1d79c90d2f13c4be32e2c3587d074606a90b5
+    pantry-tree:
+      size: 1558
+      sha256: fb1c3ca0840370ca4f5d503fc0e26dde61b9105e27176ccdba08127b4e74594c
+  original:
+    subdir: servant-auth-server
+    url: https://github.com/haskell-servant/servant-auth/archive/459fff505e5ab80b7103f335b30b56fd8170f5cc.tar.gz
 snapshots:
 - completed:
     size: 567241
