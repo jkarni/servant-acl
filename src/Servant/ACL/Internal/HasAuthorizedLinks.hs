@@ -12,13 +12,19 @@ import GHC.TypeLits (KnownSymbol, symbolVal)
 import Network.URI (escapeURIString, isUnreserved)
 import Servant (ServerT)
 import Servant.ACL.Internal.AsACL
+import qualified Servant.Auth as SAuth
+import qualified Servant.Auth.Server as SAuth
 import Servant.API hiding (Link)
 import Servant.API.Generic
 import Servant.API.Modifiers (FoldLenient, FoldRequired, RequestArgument)
-import Servant.Server.Experimental.Auth
+import Servant.Server.Experimental.Auth ()
 import Servant.Server.Generic
 
 {-
+
+This would be a nicer interface. E.g.:
+  linkIfAuthorized wholeAPI (\x -> x ^. subAPI subArg ^. subSubAPI )
+
 linkIfAuthorized ::
   forall routes m check x.
   ( Applicative m,
@@ -197,6 +203,12 @@ instance HasAuthorizedLink sub => HasAuthorizedLink (BasicAuth scope a :> sub) w
   toAuthorizedLink toA _pEp servEp pm link = \arg ->
     toAuthorizedLink toA (Proxy :: Proxy sub) (servEp arg) pm link
 
+instance HasAuthorizedLink sub => HasAuthorizedLink (SAuth.Auth auths a :> sub) where
+  type
+    MkAuthorizedLink (SAuth.Auth auths a :> sub) r =
+      SAuth.AuthResult a -> MkAuthorizedLink sub r
+  toAuthorizedLink toA _pEp servEp pm link = \arg ->
+    toAuthorizedLink toA (Proxy :: Proxy sub) (servEp arg) pm link
 {-
 instance
   (KnownSymbol sym, HasAuthorizedLink sub) =>

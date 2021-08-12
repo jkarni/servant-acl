@@ -28,6 +28,8 @@ dependencies:
 - jose
 - servant
 - servant-server
+- servant-auth
+- servant-auth-server
 - text
 - unordered-containers
 

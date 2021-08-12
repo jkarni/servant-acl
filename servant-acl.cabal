@@ -62,6 +62,8 @@ library
     , mtl
     , network-uri
     , servant
+    , servant-auth
+    , servant-auth-server
     , servant-server
     , text
     , unordered-containers
@@ -130,6 +132,8 @@ test-suite spec
     , network-uri
     , servant
     , servant-acl
+    , servant-auth
+    , servant-auth-server
     , servant-server
     , text
     , unordered-containers
