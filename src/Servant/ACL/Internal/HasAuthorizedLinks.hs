@@ -19,6 +19,7 @@ import Servant.API.Generic
 import Servant.API.Modifiers (FoldLenient, FoldRequired, RequestArgument)
 import Servant.Server.Experimental.Auth ()
 import Servant.Server.Generic
+import Servant.Multipart
 
 {-
 
@@ -206,6 +207,13 @@ instance HasAuthorizedLink sub => HasAuthorizedLink (BasicAuth scope a :> sub) w
 instance HasAuthorizedLink sub => HasAuthorizedLink (SAuth.Auth auths a :> sub) where
   type
     MkAuthorizedLink (SAuth.Auth auths a :> sub) r =
+      a -> MkAuthorizedLink sub r
+  toAuthorizedLink toA _pEp servEp pm link = \arg ->
+    toAuthorizedLink toA (Proxy :: Proxy sub) (servEp arg) pm link
+
+instance HasAuthorizedLink sub => HasAuthorizedLink (MultipartForm t a :> sub) where
+  type
+    MkAuthorizedLink (MultipartForm t a :> sub) r =
       a -> MkAuthorizedLink sub r
   toAuthorizedLink toA _pEp servEp pm link = \arg ->
     toAuthorizedLink toA (Proxy :: Proxy sub) (servEp arg) pm link

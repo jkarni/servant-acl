@@ -64,6 +64,7 @@ library
     , servant
     , servant-auth
     , servant-auth-server
+    , servant-multipart
     , servant-server
     , text
     , unordered-containers
@@ -86,6 +87,7 @@ executable readme
     , servant-acl
     , servant-auth
     , servant-auth-server
+    , servant-multipart
     , servant-server
     , text
     , unordered-containers
@@ -134,6 +136,7 @@ test-suite spec
     , servant-acl
     , servant-auth
     , servant-auth-server
+    , servant-multipart
     , servant-server
     , text
     , unordered-containers
