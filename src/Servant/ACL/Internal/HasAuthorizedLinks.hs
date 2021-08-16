@@ -217,6 +217,12 @@ instance HasAuthorizedLink sub => HasAuthorizedLink (MultipartForm t a :> sub) w
       a -> MkAuthorizedLink sub r
   toAuthorizedLink toA _pEp servEp pm link = \arg ->
     toAuthorizedLink toA (Proxy :: Proxy sub) (servEp arg) pm link
+
+-- This should be rethought. Likely it should take an argument that is the URI.
+instance HasAuthorizedLink Raw where
+  type MkAuthorizedLink Raw r = r
+  toAuthorizedLink toA _ _ _ = pure . toA
+
 {-
 instance
   (KnownSymbol sym, HasAuthorizedLink sub) =>
