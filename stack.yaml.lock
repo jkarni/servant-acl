@@ -11,9 +11,61 @@ packages:
       sha256: e7a5584a406eb3b8224160227863fc6a21b5fadab066cd8ab113cb3ba22ce43c
   original:
     hackage: network-uri-json-0.4.0.0@sha256:db352d12654c4cf218098d91d4b3f1c5eef0f8afae2f93bd1b989595caf3a738,2092
+- completed:
+    subdir: servant
+    name: servant
+    version: '0.19'
+    git: https://github.com/haskell-servant/servant
+    pantry-tree:
+      size: 2949
+      sha256: e08320fefe1391cd9b28bfb7c82abf5e551481af0ee72b9aeb7dff59ab86e18f
+    commit: 5e1569e9e28a551715339d9b926e6f513b5d5f6d
+  original:
+    subdir: servant
+    git: https://github.com/haskell-servant/servant
+    commit: 5e1569e9e28a551715339d9b926e6f513b5d5f6d
+- completed:
+    subdir: servant-server
+    name: servant-server
+    version: 0.19.1
+    git: https://github.com/haskell-servant/servant
+    pantry-tree:
+      size: 2727
+      sha256: 2f0df25ed677c6f08aaf1499eec2c82830aedbbe19564d7356ed77cbd49ceeed
+    commit: 5e1569e9e28a551715339d9b926e6f513b5d5f6d
+  original:
+    subdir: servant-server
+    git: https://github.com/haskell-servant/servant
+    commit: 5e1569e9e28a551715339d9b926e6f513b5d5f6d
+- completed:
+    subdir: servant-auth/servant-auth
+    name: servant-auth
+    version: 0.4.1.0
+    git: https://github.com/haskell-servant/servant
+    pantry-tree:
+      size: 426
+      sha256: 1bf99e8eac26c8300a132d47dee816b7c4dbe8ef4b74213a316a61c103def651
+    commit: 5e1569e9e28a551715339d9b926e6f513b5d5f6d
+  original:
+    subdir: servant-auth/servant-auth
+    git: https://github.com/haskell-servant/servant
+    commit: 5e1569e9e28a551715339d9b926e6f513b5d5f6d
+- completed:
+    subdir: servant-auth/servant-auth-server
+    name: servant-auth-server
+    version: 0.4.7.0
+    git: https://github.com/haskell-servant/servant
+    pantry-tree:
+      size: 1469
+      sha256: 6bf429779c3d0e8e591c8e761ca9357fab9558a5d209b019dd4cb65d43c7fdb9
+    commit: 5e1569e9e28a551715339d9b926e6f513b5d5f6d
+  original:
+    subdir: servant-auth/servant-auth-server
+    git: https://github.com/haskell-servant/servant
+    commit: 5e1569e9e28a551715339d9b926e6f513b5d5f6d
 snapshots:
 - completed:
-    size: 590100
-    url: https://raw.githubusercontent.com/commercialhaskell/stackage-snapshots/master/lts/18/28.yaml
-    sha256: 428ec8d5ce932190d3cbe266b9eb3c175cd81e984babf876b64019e2cbe4ea68
-  original: lts-18.28
+    size: 573643
+    url: https://raw.githubusercontent.com/commercialhaskell/stackage-snapshots/master/nightly/2022/5/14.yaml
+    sha256: 40f6a33be1035ebe9212ddb920aa2cbe28b92dacd829cde6a3150ca2fa9cbbd1
+  original: nightly-2022-05-14

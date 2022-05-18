@@ -1,4 +1,5 @@
 {-# LANGUAGE UndecidableInstances #-}
+{-# LANGUAGE CPP #-}
 
 -- | This module provides some helpers for adding links between your resources.
 -- Links are added only when actions are permitted, according to their ACL
@@ -11,7 +12,11 @@ module Servant.ACL.Internal.Links where
 
 import Control.Monad.Except
 import Data.Aeson
+#if MIN_VERSION_aeson(2,0,0)
+import qualified Data.Aeson.KeyMap as KMap
+#else
 import qualified Data.HashMap.Strict as HMap
+#endif
 import qualified Data.Map as Map
 import Data.Maybe
 import qualified Data.Text as T
@@ -63,7 +68,11 @@ withLinks o links = do
 
 instance ToJSON a => ToJSON (Linked a) where
   toJSON l = case toJSON (value l) of
+#if MIN_VERSION_aeson(2,0,0)
+    Object o -> Object $ KMap.insert "_links" (toJSON $ _links l) o
+#else
     Object o -> Object $ HMap.insert "_links" (toJSON $ _links l) o
+#endif
     v ->
       object
         [ "_links" .= toJSON (_links l),
@@ -72,7 +81,11 @@ instance ToJSON a => ToJSON (Linked a) where
 
 instance FromJSON a => FromJSON (Linked a) where
   parseJSON = withObject "Linked" $ \o -> do
+#if MIN_VERSION_aeson(2,0,0)
+    val <- parseJSON (Object $ KMap.delete "_links" o)
+#else
     val <- parseJSON (Object $ HMap.delete "_links" o)
+#endif
     l <- o .: "_links"
     pure $ Linked {
       _links = l,

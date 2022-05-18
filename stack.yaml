@@ -1,9 +1,18 @@
-resolver: lts-18.28
+resolver: nightly-2022-05-14
 packages:
 - .
 extra-deps:
 - network-uri-json-0.4.0.0@sha256:db352d12654c4cf218098d91d4b3f1c5eef0f8afae2f93bd1b989595caf3a738,2092
-allow-newer: true
+- git: https://github.com/haskell-servant/servant
+  commit: 5e1569e9e28a551715339d9b926e6f513b5d5f6d
+  subdirs:
+      - servant
+      - servant-server
+      - servant-auth/servant-auth
+      - servant-auth/servant-auth-server
+
+compiler: ghc-9.2.1
+compiler-check: match-minor
 nix:
   enable: false
   packages:
