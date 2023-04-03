@@ -7,7 +7,7 @@ stdenv.mkDerivation {
   name = "servant-acl";
   buildInputs = [
     stack
-    haskell.compiler.ghc921
+    haskell.compiler.ghc925
     zlib
   ];
 }

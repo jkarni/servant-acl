@@ -1,5 +1,5 @@
 name:                servant-acl
-version:             0.1.0.0
+version:             0.1.1.0
 github:              "jkarni/servant-acl"
 license:             BSD3
 author:              "Julian K. Arni"
@@ -25,7 +25,7 @@ dependencies:
 - containers
 - mtl
 - network-uri
-- jose
+- jose >= 0.10
 - servant
 - servant-server
 - servant-auth

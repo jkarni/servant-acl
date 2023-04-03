@@ -22,8 +22,7 @@ import Data.Maybe
 import qualified Data.Text as T
 import GHC.Exts (IsList, IsString)
 import GHC.Generics (Generic)
-import Network.URI (URI)
-import Crypto.JOSE.Types ()
+import Network.URI (URI, parseURI)
 import Servant.ACL.Internal.HasAuthorizedLinks
 
 newtype Rel = Rel {getRel :: T.Text}
@@ -36,7 +35,17 @@ data LinkObject
   = LinkObject
       {href :: URI}
   deriving stock (Eq, Show, Generic)
-  deriving anyclass (ToJSON, FromJSON)
+
+instance FromJSON LinkObject where
+  parseJSON = fmap LinkObject . uriFromJSON
+   where
+    uriFromJSON = withText "URI" $ maybe (fail "not a URI") pure . parseURI . T.unpack
+
+
+instance ToJSON LinkObject where
+  toJSON (LinkObject h) = uriToJSON h
+   where
+     uriToJSON = String . T.pack . show
 
 linkObjectFromLink :: Link -> LinkObject
 linkObjectFromLink l = LinkObject $ linkURI l
