@@ -38,6 +38,7 @@ Below is a fairly extensive annotated example of usage.
 {-# LANGUAGE OverloadedStrings #-}
 {-# LANGUAGE TypeOperators #-}
 import Data.Aeson (ToJSON, FromJSON)
+import Control.Monad (when)
 import Control.Monad.Reader
 import Control.Monad.Error.Class
 import Data.Foldable (find)
